@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Operário da Usina Nuclear</title>
+<style>
+:root{--bg:#f6f5f1;--fg:#1c1c1a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171716;--fg:#ecebe5}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;padding:12px;padding-top:calc(12px + env(safe-area-inset-top,0px));padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+main{max-width:860px;margin:0 auto}
+h1{font-size:1.3rem;margin:0 0 10px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .upn{color:#ecebe5}
+:root:not([data-theme="light"]) .upn-mute{background:#222220;color:#ecebe5;border-color:#3a3935}
+:root:not([data-theme="light"]) .upn-bar{background:#3a3935}
+:root:not([data-theme="light"]) .upn-btn{background:#262624;color:#ecebe5;border-color:#3a3935}
+:root:not([data-theme="light"]) .upn-btn.pri{background:#1d9e75;color:#fff;border-color:#1d9e75}
+:root:not([data-theme="light"]) .upn-best{color:#a3a199}}
+</style>
+</head>
+<body>
+<main>
+<h1>👷 Operário da Usina Nuclear</h1>
+<div id="game"></div>
+</main>
+<script>
+const UPN_STATIONS = [
+  { n: "Mina de Ur\u00E2nio", e: "\u26CF\uFE0F", c: "#8a7a4a", t: "Do min\u00E9rio \u00E0 torta amarela", x: "O ur\u00E2nio \u00E9 extra\u00EDdo de min\u00E9rios como a uraninita (pechblenda). O min\u00E9rio \u00E9 mo\u00EDdo e tratado com \u00E1cido, e o ur\u00E2nio \u00E9 concentrado como U\u2083O\u2088, um p\u00F3 amarelo-alaranjado chamado torta amarela. A qu\u00EDmica do combust\u00EDvel come\u00E7a aqui: o U\u2083O\u2088 \u00E9 um \u00F3xido misto de ur\u00E2nio." },
+  { n: "Convers\u00E3o Qu\u00EDmica", e: "\u2697\uFE0F", c: "#4a7a6a", t: "De \u00F3xido a g\u00E1s", x: "Para enriquecer o ur\u00E2nio, ele precisa virar g\u00E1s. A torta amarela \u00E9 transformada em hexafluoreto de ur\u00E2nio (UF\u2086), um composto com fl\u00FAor que sublima a apenas 56 \u00B0C. O fl\u00FAor \u00E9 ideal porque tem um \u00FAnico is\u00F3topo est\u00E1vel: n\u00E3o atrapalha a separa\u00E7\u00E3o dos is\u00F3topos de ur\u00E2nio." },
+  { n: "Enriquecimento", e: "\u2699\uFE0F", c: "#6a5a8a", t: "Separando os is\u00F3topos", x: "O ur\u00E2nio natural tem 99,3% de U-238 e s\u00F3 0,7% de U-235, o is\u00F3topo que sofre fiss\u00E3o com facilidade. Como os is\u00F3topos t\u00EAm a mesma qu\u00EDmica, a separa\u00E7\u00E3o usa a pequena diferen\u00E7a de massa: o UF\u2086 gasoso gira em milhares de centr\u00EDfugas at\u00E9 o U-235 chegar a 3\u20135%." },
+  { n: "Fabrica\u00E7\u00E3o do Combust\u00EDvel", e: "\u{1F3ED}", c: "#4a6a8a", t: "Pastilhas de UO\u2082", x: "O UF\u2086 enriquecido volta a ser s\u00F3lido: vira di\u00F3xido de ur\u00E2nio (UO\u2082), uma cer\u00E2mica que aguenta temperaturas alt\u00EDssimas. O p\u00F3 \u00E9 prensado e sinterizado em pastilhas, empilhadas em varetas de zircaloy, uma liga de zirc\u00F4nio que deixa os n\u00EAutrons passarem, e reunidas em conjuntos combust\u00EDveis." },
+  { n: "N\u00FAcleo do Reator", e: "\u269B\uFE0F", c: "#8a4a4a", t: "Fiss\u00E3o e rea\u00E7\u00E3o em cadeia", x: "Um n\u00EAutron atinge o n\u00FAcleo do U-235, que se parte em dois fragmentos (como b\u00E1rio e cript\u00F4nio), libera muita energia e 2 ou 3 novos n\u00EAutrons. Esses n\u00EAutrons fendem outros \u00E1tomos: \u00E9 a rea\u00E7\u00E3o em cadeia. As barras de controle, de boro ou c\u00E1dmio, absorvem n\u00EAutrons sem sofrer fiss\u00E3o e regulam tudo." },
+  { n: "Combust\u00EDvel Irradiado", e: "\u267B\uFE0F", c: "#5a5a8a", t: "Rejeitos e reprocessamento", x: "Depois de cerca de 3 anos no reator, o combust\u00EDvel vai para piscinas de \u00E1gua que absorvem calor e radia\u00E7\u00E3o. Ele ainda cont\u00E9m ur\u00E2nio e plut\u00F4nio aproveit\u00E1veis: o reprocessamento os separa quimicamente para reutiliza\u00E7\u00E3o. O restante vira rejeito de alta atividade, vitrificado e guardado com seguran\u00E7a por milhares de anos." }
+];
+const UPN_INCIDENTS = [
+  { s: 0, a: "\u26CF\uFE0F O min\u00E9rio entregue tem teor de ur\u00E2nio muito abaixo do previsto!", q: "O que fazer?", o: ["Refazer a an\u00E1lise qu\u00EDmica e rejeitar o lote", "Moer tudo e usar assim mesmo", "Misturar com min\u00E9rio bom sem registrar"], r: 0, w: "Sem ur\u00E2nio suficiente no min\u00E9rio, a produ\u00E7\u00E3o de torta amarela (U\u2083O\u2088) fica comprometida. Lotes fora do teor s\u00E3o rejeitados depois de uma nova an\u00E1lise." },
+  { s: 0, a: "\u{1F4E6} Um cont\u00EAiner de torta amarela (U\u2083O\u2088) abriu e h\u00E1 poeira no ar!", q: "O que fazer?", o: ["Varrer a poeira para fora do galp\u00E3o", "Isolar a \u00E1rea e recolher o material com prote\u00E7\u00E3o", "Ignorar: \u00E9 s\u00F3 um p\u00F3 amarelo"], r: 1, w: "U\u2083O\u2088 em p\u00F3 \u00E9 risco qu\u00EDmico e radioativo se inalado. A resposta certa \u00E9 isolar a \u00E1rea, proteger as vias respirat\u00F3rias e recolher o material." },
+  { s: 1, a: "\u{1F4A8} Vazamento de UF\u2086 na convers\u00E3o! O g\u00E1s est\u00E1 reagindo com a umidade do ar.", q: "O que fazer?", o: ["Isolar o trecho e tratar o produto da rea\u00E7\u00E3o com seguran\u00E7a", "Abrir as janelas e esperar dissipar", "Jogar \u00E1gua direto no vazamento"], r: 0, w: "UF\u2086 reage com a umidade e forma UO\u2082F\u2082 e \u00E1cido fluor\u00EDdrico (HF), t\u00F3xico e corrosivo. O isolamento vem antes de qualquer limpeza." },
+  { s: 2, a: "\u{1F6A8} O lote chegou enriquecido muito al\u00E9m de 3\u20135% de U-235!", q: "O que fazer?", o: ["Usar assim mesmo", "Devolver e exigir ur\u00E2nio enriquecido a 3\u20135%", "Diluir com ur\u00E2nio natural no almoxarifado"], r: 1, w: "O projeto do reator \u00E9 calculado para 3\u20135% de U-235. Enriquecimento errado desequilibra a rea\u00E7\u00E3o em cadeia e fere as regras internacionais de fiscaliza\u00E7\u00E3o." },
+  { s: 3, a: "\u{1F3ED} As pastilhas de UO\u2082 do novo lote vieram com trincas!", q: "O que fazer?", o: ["Usar assim mesmo", "Colar as trincas com resina", "Rejeitar o lote e registrar o defeito"], r: 2, w: "A pastilha \u00EDntegra \u00E9 a primeira barreira que segura os produtos de fiss\u00E3o. Trincada, ela pode liberar material radioativo dentro da vareta." },
+  { s: 4, a: "\u26A0\uFE0F Rea\u00E7\u00E3o em cadeia acelerando! N\u00EAutrons demais no n\u00FAcleo.", q: "O que fazer?", o: ["Inserir as barras de controle", "Retirar as barras de controle", "Trocar o combust\u00EDvel por U-238 puro"], r: 0, w: "O boro e o c\u00E1dmio das barras capturam n\u00EAutrons sem sofrer fiss\u00E3o, freando a rea\u00E7\u00E3o em cadeia." },
+  { s: 4, a: "\u{1F321}\uFE0F O reator foi desligado, mas a temperatura continua subindo!", q: "O que fazer?", o: ["Manter a refrigera\u00E7\u00E3o funcionando", "Desligar as bombas para economizar energia", "Abrir o n\u00FAcleo para ventilar"], r: 0, w: "Os produtos de fiss\u00E3o acumulados no combust\u00EDvel seguem decaindo e gerando calor residual por dias. Sem refrigera\u00E7\u00E3o, o combust\u00EDvel pode derreter." },
+  { s: 5, a: "\u{1F4A7} O n\u00EDvel de \u00E1gua da piscina do combust\u00EDvel irradiado est\u00E1 caindo!", q: "O que fazer?", o: ["Repor a \u00E1gua imediatamente", "Retirar o combust\u00EDvel da piscina", "Esperar a evapora\u00E7\u00E3o estabilizar sozinha"], r: 0, w: "A \u00E1gua da piscina refrigera o combust\u00EDvel irradiado e ainda bloqueia a radia\u00E7\u00E3o. Sem ela, o material superaquece." }
+];
+const UPN_QUIZ = [
+  { q: "Qual is\u00F3topo do ur\u00E2nio sofre fiss\u00E3o com facilidade nos reatores?", o: ["U-238", "U-235", "Carbono-14"], r: 1, w: "\u00C9 o U-235: s\u00F3 0,7% do ur\u00E2nio natural. \u00C9 por isso que o enriquecimento existe." },
+  { q: "Na fiss\u00E3o do U-235, um n\u00EAutron atinge o n\u00FAcleo e...", o: ["o \u00E1tomo vira chumbo sem liberar energia", "o \u00E1tomo se dissolve na \u00E1gua de refrigera\u00E7\u00E3o", "o n\u00FAcleo se parte, liberando energia e novos n\u00EAutrons"], r: 2, w: "O n\u00FAcleo se parte em dois fragmentos, libera muita energia e 2 ou 3 n\u00EAutrons, que sustentam a rea\u00E7\u00E3o em cadeia." },
+  { q: "Que composto gasoso permite enriquecer o ur\u00E2nio nas centr\u00EDfugas?", o: ["UF\u2086", "UO\u2082", "CO\u2082"], r: 0, w: "O hexafluoreto de ur\u00E2nio (UF\u2086) sublima a 56 \u00B0C, e o fl\u00FAor tem um \u00FAnico is\u00F3topo, ideal para separar U-235 de U-238." },
+  { q: "Uma pastilha de UO\u2082 do tamanho de uma borracha equivale, em energia, a cerca de...", o: ["uma pilha AA", "um litro de gasolina", "uma tonelada de carv\u00E3o"], r: 2, w: "A fiss\u00E3o libera milh\u00F5es de vezes mais energia por \u00E1tomo do que a queima de combust\u00EDveis f\u00F3sseis." },
+  { q: "O que \u00E9 a torta amarela?", o: ["U\u2083O\u2088 concentrado, etapa entre a minera\u00E7\u00E3o e a convers\u00E3o", "Um lanche servido na usina", "Ur\u00E2nio enriquecido pronto para o reator"], r: 0, w: "\u00C9 o U\u2083O\u2088, o concentrado de ur\u00E2nio obtido do min\u00E9rio, que depois \u00E9 convertido em UF\u2086." },
+  { q: "Por que o reprocessamento do combust\u00EDvel irradiado interessa?", o: ["Transforma o rejeito em ouro", "Recupera ur\u00E2nio e plut\u00F4nio para reaproveitar como combust\u00EDvel", "Elimina toda a radioatividade na hora"], r: 1, w: "O combust\u00EDvel irradiado ainda guarda ur\u00E2nio e plut\u00F4nio aproveit\u00E1veis; o reprocessamento os separa quimicamente." }
+];
+const UPN_CSS = `
+.upn{font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;color:#251f21;-webkit-user-select:none;user-select:none}
+.upn *{box-sizing:border-box}
+.upn-hud{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:.92rem;margin-bottom:8px}
+.upn-obj{flex:1 1 100%;font-weight:700}
+.upn-score{font-weight:700;white-space:nowrap}
+.upn-best{color:#8a8587;white-space:nowrap;font-size:.85rem}
+.upn-risk{display:flex;gap:8px;align-items:center;flex:1;min-width:150px}
+.upn-bar{flex:1;height:14px;background:#e6e2dc;border-radius:7px;overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.15)}
+.upn-bar i{display:block;height:100%;width:0;background:#3ecf9c;transition:width .15s linear,background .3s}
+.upn-bar.hot i{animation:upn-pulse .7s infinite alternate}
+@keyframes upn-pulse{from{filter:brightness(1)}to{filter:brightness(1.5)}}
+.upn-mute{border:1px solid #ddd9d2;background:#fff;border-radius:8px;font:inherit;font-size:1rem;padding:4px 10px;cursor:pointer;touch-action:none}
+.upn-wrap{position:relative;border-radius:14px;overflow:hidden;box-shadow:0 6px 24px rgba(20,30,45,.25)}
+.upn canvas{width:100%;display:block;background:#1b2530;touch-action:none;cursor:pointer}
+.upn-md{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(10,14,20,.72);padding:12px;backdrop-filter:blur(2px)}
+.upn-md.on{display:flex;animation:upn-fade .18s ease-out}
+@keyframes upn-fade{from{opacity:0}to{opacity:1}}
+.upn-box{background:#fff;border-radius:14px;padding:18px;max-width:540px;width:100%;max-height:100%;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.4);animation:upn-pop .22s ease-out;color:#251f21}
+@keyframes upn-pop{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
+.upn-box h2{margin:0 0 8px;font-size:1.15rem}
+.upn-box p{margin:0 0 12px}
+.upn-btn{border:1px solid #ddd9d2;background:#fff;color:#251f21;padding:11px 16px;border-radius:10px;font:inherit;cursor:pointer;touch-action:none}
+.upn-btn.pri{background:#1d9e75;color:#fff;border-color:#1d9e75;font-weight:700}
+.upn-btn:active{transform:scale(.97)}
+.upn-opt{display:block;width:100%;text-align:left;margin:7px 0}
+.upn-why{background:#eaf7f1;border-left:4px solid #1d9e75;border-radius:8px;padding:10px 12px;margin:0 0 12px;font-size:.95rem}
+.upn-ctl{display:flex;gap:8px;margin-top:10px}
+.upn-ctl .upn-btn{flex:1;font-size:1.25rem;padding:14px;min-height:56px}
+.upn-toast{min-height:1.6em;margin-top:6px;color:#d85a30;font-weight:700;font-size:.92rem}
+.upn-sub{color:#8a8587;font-size:.85rem;margin:6px 0 0}
+`;
+function startGame(root) {
+  const styleEl = document.createElement("style");
+  styleEl.textContent = UPN_CSS;
+  root.appendChild(styleEl);
+  const host = document.createElement("div");
+  host.className = "upn";
+  host.tabIndex = 0;
+  host.style.outline = "none";
+  host.innerHTML = '<div class="upn-hud"><span class="upn-obj" data-el="obj"></span><span class="upn-score" data-el="score">Pontos: 0</span><span class="upn-best" data-el="best"></span><div class="upn-risk"><span data-el="dl">Risco</span><div class="upn-bar" data-el="bar"><i data-el="db"></i></div></div><button class="upn-mute" data-el="mute" type="button" title="Ligar/desligar som">\u{1F50A}</button></div><div class="upn-wrap"><canvas data-el="cv" width="800" height="360"></canvas><div class="upn-md" data-el="md"><div class="upn-box" data-el="box"></div></div></div><div class="upn-ctl"><button class="upn-btn" data-el="bl" type="button" aria-label="Andar para a esquerda">\u25C0</button><button class="upn-btn pri" data-el="bi" type="button">Interagir (E)</button><button class="upn-btn" data-el="br" type="button" aria-label="Andar para a direita">\u25B6</button></div><div class="upn-toast" data-el="toast"></div><p class="upn-sub">Setas ou A/D para andar, E ou espa\xE7o para interagir. No celular, use os bot\xF5es ou toque no ch\xE3o para andar at\xE9 um ponto.</p>';
+  root.appendChild(host);
+  const els = {};
+  host.querySelectorAll("[data-el]").forEach((n) => {
+    els[n.dataset.el] = n;
+  });
+  const cv = els.cv;
+  const ctx = cv.getContext("2d");
+  const dpr = Math.min(2, typeof window !== "undefined" && window.devicePixelRatio || 1);
+  cv.width = 800 * dpr;
+  cv.height = 360 * dpr;
+  ctx.scale(dpr, dpr);
+  const W = 800, H = 360, WORLD = 2450, FLOOR = 300;
+  const S = UPN_STATIONS, INC = UPN_INCIDENTS;
+  const isTouch = typeof window !== "undefined" && ("ontouchstart" in window || (navigator.maxTouchPoints || 0) > 0 || typeof matchMedia === "function" && matchMedia("(pointer: coarse)").matches);
+  let st = "learn";
+  let seen = /* @__PURE__ */ new Set();
+  let px = 120, face = 1, walk = 0;
+  const keys = {};
+  let danger = 0, order = [], cur = 0;
+  let quizOrder = [], quizCur = 0, quizRights = 0;
+  let modal = false, cool = 0, score = 0, best = 0, wrongs = 0, rights = 0;
+  let shake = 0, camX = 0, targetX = null;
+  let muted = false, raf = 0, alive = true, frameN = 0;
+  let popups = [];
+  let confetti = [];
+  let steam = [];
+  try {
+    best = parseInt(localStorage.getItem("upn.best") || "0", 10) || 0;
+  } catch (e) {
+    best = 0;
+  }
+  try {
+    muted = localStorage.getItem("upn.muted") === "1";
+  } catch (e) {
+    muted = false;
+  }
+  function sx(i) {
+    return 260 + i * 390;
+  }
+  function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.random() * (i + 1) | 0;
+      const t = a[i];
+      a[i] = a[j];
+      a[j] = t;
+    }
+    return a;
+  }
+  function pickIncidents() {
+    const idx = shuffle(INC.map((_, i) => i));
+    const used = /* @__PURE__ */ new Set();
+    const out = [];
+    for (const i of idx) {
+      if (!used.has(INC[i].s)) {
+        used.add(INC[i].s);
+        out.push(i);
+        if (out.length === 4) break;
+      }
+    }
+    return out;
+  }
+  let AC = null;
+  function audio() {
+    if (muted) return null;
+    try {
+      const Ctor = window.AudioContext || window.webkitAudioContext;
+      if (!Ctor) return null;
+      if (!AC) AC = new Ctor();
+      if (AC.state === "suspended") AC.resume();
+      return AC;
+    } catch (e) {
+      return null;
+    }
+  }
+  function beep(f, d, type, v, dl) {
+    const ac = audio();
+    if (!ac) return;
+    try {
+      const t0 = ac.currentTime + (dl || 0);
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = type || "square";
+      o.frequency.value = f;
+      g.gain.setValueAtTime(v || 0.045, t0);
+      g.gain.exponentialRampToValueAtTime(1e-4, t0 + d);
+      o.connect(g);
+      g.connect(ac.destination);
+      o.start(t0);
+      o.stop(t0 + d + 0.03);
+    } catch (e) {
+    }
+  }
+  const sClick = () => beep(700, 0.06, "square", 0.035);
+  const sOk = () => {
+    beep(523, 0.09, "square", 0.05);
+    beep(784, 0.14, "square", 0.05, 0.09);
+  };
+  const sBad = () => beep(170, 0.22, "sawtooth", 0.05);
+  const sWin = () => {
+    beep(523, 0.12);
+    beep(659, 0.12, "square", 0.05, 0.12);
+    beep(784, 0.12, "square", 0.05, 0.24);
+    beep(1046, 0.3, "square", 0.05, 0.36);
+  };
+  const sLose = () => {
+    beep(320, 0.2, "sawtooth", 0.05);
+    beep(240, 0.25, "sawtooth", 0.05, 0.2);
+    beep(160, 0.45, "sawtooth", 0.05, 0.45);
+  };
+  function obj() {
+    if (st === "learn") els.obj.textContent = "Fase 1 \u2014 visite as 6 etapas do ciclo do combust\u00EDvel (" + seen.size + "/6)";
+    else if (st === "crisis") els.obj.textContent = INC[order[cur]].a + "  (incidente " + (cur + 1) + " de 4)";
+    else if (st === "quiz") els.obj.textContent = "\u{1F9EA} Desafio final: quiz da qu\u00EDmica (pergunta " + (quizCur + 1) + " de " + quizOrder.length + ")";
+    else els.obj.textContent = "";
+  }
+  function hud() {
+    els.score.textContent = "Pontos: " + score;
+    els.best.textContent = best > 0 ? "Recorde: " + best : "";
+    els.db.style.width = Math.min(100, danger) + "%";
+    els.db.style.background = danger < 40 ? "#3ecf9c" : danger < 70 ? "#f0b23e" : "#f04a3a";
+    els.bar.classList.toggle("hot", danger >= 70);
+    els.dl.style.opacity = st === "crisis" || st === "lose" ? "1" : "0.45";
+    els.mute.textContent = muted ? "\u{1F507}" : "\u{1F50A}";
+  }
+  function toast(m) {
+    els.toast.textContent = m;
+    const anyToast = toast;
+    clearTimeout(anyToast.t);
+    anyToast.t = setTimeout(() => {
+      els.toast.textContent = "";
+    }, 2600);
+  }
+  function popup(txt) {
+    popups.push({ x: px, y: FLOOR - 70, txt, t: 0 });
+  }
+  function addScore(n, label) {
+    score += n;
+    popup("+" + n + " " + label);
+    hud();
+  }
+  function show(h) {
+    els.box.innerHTML = h;
+    els.md.classList.add("on");
+    modal = true;
+    keys.l = false;
+    keys.r = false;
+    targetX = null;
+  }
+  function hide() {
+    els.md.classList.remove("on");
+    modal = false;
+  }
+  function near() {
+    let b = -1, d = 999;
+    S.forEach((s, i) => {
+      const dx = Math.abs(px - sx(i));
+      if (dx < d && dx < 100) {
+        d = dx;
+        b = i;
+      }
+    });
+    return b;
+  }
+  function act() {
+    if (modal || st === "win" || st === "lose") return;
+    const i = near();
+    if (i < 0) {
+      toast("Aproxime-se de uma \xE1rea.");
+      return;
+    }
+    sClick();
+    if (st === "learn") {
+      const s = S[i];
+      const novo = !seen.has(i);
+      seen.add(i);
+      if (novo) addScore(50, "\xE1rea conhecida");
+      obj();
+      show("<h2>" + s.e + " " + s.n + ": " + s.t + "</h2><p>" + s.x + '</p><button class="upn-btn pri" data-ok type="button">Entendi</button>');
+      const ok = els.box.querySelector("[data-ok]");
+      ok.onclick = () => {
+        sClick();
+        hide();
+        if (seen.size === 6) startCrisis();
+      };
+    } else {
+      const c = INC[order[cur]];
+      if (i !== c.s) {
+        if (cool <= 0) {
+          danger += 6;
+          cool = 40;
+          shake = 8;
+          sBad();
+          toast("Essa \xE1rea n\xE3o resolve o problema! O risco aumentou.");
+        }
+        return;
+      }
+      let h = "<h2>" + S[i].e + " " + S[i].n + "</h2><p>" + c.a + " " + c.q + "</p>";
+      c.o.forEach((o, k) => {
+        h += '<button class="upn-btn upn-opt" data-k="' + k + '" type="button">' + o + "</button>";
+      });
+      show(h);
+      els.box.querySelectorAll(".upn-opt").forEach((b) => {
+        b.onclick = () => {
+          const btn = b;
+          if (+btn.dataset.k === c.r) {
+            rights++;
+            const pts = wrongsOnCurrent === 0 ? 150 : wrongsOnCurrent === 1 ? 75 : 25;
+            addScore(pts, "incidente resolvido");
+            danger = Math.max(0, danger - 18);
+            sOk();
+            cur++;
+            show('<h2>\u2705 Decis\xE3o correta!</h2><div class="upn-why">' + c.w + '</div><button class="upn-btn pri" data-ok type="button">Continuar</button>');
+            els.box.querySelector("[data-ok]").onclick = () => {
+              sClick();
+              hide();
+              wrongsOnCurrent = 0;
+              if (cur >= 4) startQuiz();
+              else obj();
+            };
+          } else {
+            wrongs++;
+            wrongsOnCurrent++;
+            danger += 12;
+            shake = 10;
+            sBad();
+            btn.disabled = true;
+            btn.style.opacity = "0.4";
+            toast("\u274C A\xE7\xE3o errada, o risco subiu! Lembre-se do que aprendeu.");
+          }
+          hud();
+        };
+      });
+    }
+  }
+  let wrongsOnCurrent = 0;
+  function startCrisis() {
+    st = "crisis";
+    order = pickIncidents();
+    cur = 0;
+    danger = 12;
+    wrongsOnCurrent = 0;
+    shake = 12;
+    obj();
+    show('<h2>\u{1F6A8} ALARME!</h2><p>V\u00E1rios problemas apareceram ao longo do ciclo do combust\u00EDvel, da mina at\u00E9 a piscina de armazenamento. Leia o alerta, v\u00E1 at\u00E9 a \u00E1rea certa e tome a decis\u00E3o correta antes que o risco chegue a 100%. Nenhuma \u00E1rea vai piscar para indicar a resposta \u2014 agora \u00E9 com voc\u00EA!</p><button class="upn-btn pri" data-ok type="button">Ao trabalho!</button>');
+    els.box.querySelector("[data-ok]").onclick = () => {
+      sClick();
+      hide();
+    };
+  }
+  function startQuiz() {
+    st = "quiz";
+    quizOrder = shuffle(UPN_QUIZ.map((_, i) => i)).slice(0, 3);
+    quizCur = 0;
+    quizRights = 0;
+    obj();
+    show('<h2>\u{1F9EA} Desafio final: a qu\u00EDmica dos combust\u00EDveis</h2><p>Crise controlada! Antes de encerrar o turno, prove que voc\u00EA entendeu a qu\u00EDmica do combust\u00EDvel nuclear: 3 perguntas r\u00E1pidas, 100 pontos por acerto.</p><button class="upn-btn pri" data-ok type="button">Come\u00E7ar o quiz</button>');
+    els.box.querySelector("[data-ok]").onclick = () => {
+      sClick();
+      showQuiz();
+    };
+  }
+  function showQuiz() {
+    const c = UPN_QUIZ[quizOrder[quizCur]];
+    let h = "<h2>\u{1F9EA} Pergunta " + (quizCur + 1) + " de " + quizOrder.length + "</h2><p>" + c.q + "</p>";
+    c.o.forEach((o, k) => {
+      h += '<button class="upn-btn upn-opt" data-k="' + k + '" type="button">' + o + "</button>";
+    });
+    show(h);
+    els.box.querySelectorAll(".upn-opt").forEach((b) => {
+      b.onclick = () => {
+        const btn = b;
+        const certa = +btn.dataset.k === c.r;
+        if (certa) {
+          quizRights++;
+          addScore(100, "resposta certa");
+          sOk();
+        } else {
+          sBad();
+          shake = 6;
+        }
+        quizCur++;
+        const ultima = quizCur >= quizOrder.length;
+        show("<h2>" + (certa ? "\u2705 Resposta certa!" : "\u274C Resposta errada!") + '</h2><div class="upn-why">' + c.w + '</div><button class="upn-btn pri" data-ok type="button">' + (ultima ? "Ver resultado" : "Pr\u00F3xima") + "</button>");
+        els.box.querySelector("[data-ok]").onclick = () => {
+          sClick();
+          if (ultima) {
+            st = "win";
+            end(true);
+          } else {
+            obj();
+            showQuiz();
+          }
+        };
+        hud();
+      };
+    });
+  }
+  function spawnConfetti() {
+    const cores = ["#f04a3a", "#f0b23e", "#3ecf9c", "#4a8ad0", "#c06ae0"];
+    for (let i = 0; i < 90; i++) confetti.push({ x: Math.random() * W, y: -20 - Math.random() * 120, vx: (Math.random() - 0.5) * 2, vy: 2 + Math.random() * 3, c: cores[i % cores.length], t: 0 });
+  }
+  function end(w) {
+    els.obj.textContent = "";
+    let bonus = 0;
+    if (w) {
+      bonus = Math.round((100 - danger) * 2);
+      score += bonus;
+      spawnConfetti();
+      sWin();
+    } else {
+      sLose();
+    }
+    if (score > best) {
+      best = score;
+      try {
+        localStorage.setItem("upn.best", String(best));
+      } catch (e) {
+      }
+    }
+    hud();
+    const resumo = "<p>Pontua\u00E7\u00E3o final: <b>" + score + "</b>" + (w ? " (b\u00F4nus de seguran\u00E7a: +" + bonus + ")" : "") + "<br>Incidentes resolvidos: <b>" + rights + "</b> \u00B7 Erros: <b>" + wrongs + "</b>" + (quizOrder.length ? "<br>Quiz da qu\u00EDmica: <b>" + quizRights + "/" + quizOrder.length + "</b>" : "") + "<br>Recorde: <b>" + best + "</b></p>";
+    show(w ? "<h2>\u{1F389} Turno conclu\u00EDdo!</h2><p>Voc\u00EA dominou o ciclo do combust\u00EDvel nuclear: da mina \u00E0 torta amarela (U\u2083O\u2088), da convers\u00E3o em UF\u2086 ao enriquecimento, das pastilhas de UO\u2082 \u00E0 fiss\u00E3o no n\u00FAcleo e \u00E0 destina\u00E7\u00E3o segura do combust\u00EDvel irradiado. \u00C9 a qu\u00EDmica que transforma um min\u00E9rio em eletricidade.</p>" + resumo + '<button class="upn-btn pri" data-ok type="button">Jogar de novo</button>' : "<h2>\u{1F4A5} Risco m\u00E1ximo!</h2><p>O desligamento de emerg\u00EAncia parou tudo. Revise: <b>barras de boro e c\u00E1dmio</b> absorvem n\u00EAutrons, a <b>refrigera\u00E7\u00E3o</b> retira o calor residual dos produtos de fiss\u00E3o, <b>pastilhas \u00EDntegras de UO\u2082</b> seguram o material radioativo e o <b>enriquecimento</b> deve ficar entre 3\u20135%.</p>" + resumo + '<button class="upn-btn pri" data-ok type="button">Tentar de novo</button>');
+    els.box.querySelector("[data-ok]").onclick = () => {
+      sClick();
+      hide();
+      reset();
+    };
+  }
+  function reset() {
+    st = "learn";
+    seen = /* @__PURE__ */ new Set();
+    px = 120;
+    danger = 0;
+    cur = 0;
+    score = 0;
+    wrongs = 0;
+    rights = 0;
+    wrongsOnCurrent = 0;
+    quizOrder = [];
+    quizCur = 0;
+    quizRights = 0;
+    popups = [];
+    confetti = [];
+    targetX = null;
+    obj();
+    hud();
+  }
+  const clouds = [0, 1, 2, 3, 4].map((i) => ({ x: i * 520 + 80, y: 30 + i % 3 * 28, s: 0.7 + i % 3 * 0.25, v: 0.12 + i % 2 * 0.08 }));
+  const towers = [{ x: 500, h: 120 }, { x: 640, h: 95 }, { x: 1650, h: 110 }];
+  function drawCloud(x, y, s) {
+    ctx.fillStyle = "rgba(255,255,255,.85)";
+    ctx.beginPath();
+    ctx.arc(x, y, 14 * s, 0, 6.283);
+    ctx.arc(x + 16 * s, y - 7 * s, 11 * s, 0, 6.283);
+    ctx.arc(x + 32 * s, y, 13 * s, 0, 6.283);
+    ctx.fill();
+  }
+  function drawTower(x, h, cam) {
+    const tx = x - cam * 0.4, tw = 46;
+    ctx.fillStyle = "#9fb2c2";
+    ctx.beginPath();
+    ctx.moveTo(tx - tw / 2, FLOOR);
+    ctx.quadraticCurveTo(tx - tw / 5, FLOOR - h * 0.55, tx - tw / 3.2, FLOOR - h);
+    ctx.lineTo(tx + tw / 3.2, FLOOR - h);
+    ctx.quadraticCurveTo(tx + tw / 5, FLOOR - h * 0.55, tx + tw / 2, FLOOR);
+    ctx.fill();
+    ctx.fillStyle = "#c9503a";
+    ctx.fillRect(tx - tw / 3.2, FLOOR - h, tw / 3.2 * 2, 8);
+  }
+  function draw() {
+    const shakeX = shake > 0 ? (Math.random() - 0.5) * shake : 0;
+    const shakeY = shake > 0 ? (Math.random() - 0.5) * shake * 0.6 : 0;
+    camX = Math.max(0, Math.min(WORLD - W, px - W / 2));
+    const cam = camX + shakeX;
+    ctx.clearRect(0, 0, W, H);
+    const sky = ctx.createLinearGradient(0, 0, 0, FLOOR);
+    sky.addColorStop(0, "#79a8cf");
+    sky.addColorStop(0.7, "#b8d2e4");
+    sky.addColorStop(1, "#d8e6ee");
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, W, FLOOR + shakeY);
+    clouds.forEach((c) => {
+      c.x -= c.v;
+      if (c.x < -120) c.x = WORLD + 120;
+      drawCloud(c.x - camX * 0.2, c.y, c.s);
+    });
+    towers.forEach((t) => drawTower(t.x, t.h, camX));
+    if (frameN % 12 === 0 && steam.length < 40) {
+      const t = towers[Math.random() * towers.length | 0];
+      steam.push({ x: t.x - camX * 0.4, y: FLOOR - t.h - 6, r: 4 + Math.random() * 4, v: 0.4 + Math.random() * 0.5, o: 0.5 });
+    }
+    steam.forEach((p) => {
+      p.y -= p.v;
+      p.r += 0.12;
+      p.o -= 6e-3;
+    });
+    steam = steam.filter((p) => p.o > 0);
+    steam.forEach((p) => {
+      ctx.fillStyle = "rgba(245,248,250," + Math.max(0, p.o) + ")";
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, 6.283);
+      ctx.fill();
+    });
+    ctx.fillStyle = "#3a4552";
+    ctx.fillRect(0, FLOOR + shakeY, W, H - FLOOR - shakeY);
+    ctx.fillStyle = "#55636f";
+    ctx.fillRect(0, FLOOR + shakeY, W, 6);
+    ctx.fillStyle = "#ffd84a";
+    for (let x2 = -(cam % 60); x2 < W; x2 += 60) ctx.fillRect(x2, FLOOR + 26 + shakeY, 30, 4);
+    ctx.textAlign = "center";
+    S.forEach((s, i) => {
+      const x2 = sx(i) - cam;
+      if (x2 < -140 || x2 > W + 140) return;
+      const top = FLOOR - 190 + shakeY;
+      ctx.fillStyle = "rgba(0,0,0,.18)";
+      ctx.beginPath();
+      ctx.ellipse(x2, FLOOR + 4 + shakeY, 92, 8, 0, 0, 6.283);
+      ctx.fill();
+      const grad = ctx.createLinearGradient(0, top, 0, FLOOR);
+      grad.addColorStop(0, s.c);
+      grad.addColorStop(1, "rgba(0,0,0,.35)");
+      ctx.fillStyle = s.c;
+      ctx.fillRect(x2 - 85, top, 170, 190);
+      ctx.fillStyle = grad;
+      ctx.globalAlpha = 0.35;
+      ctx.fillRect(x2 - 85, top, 170, 190);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = "rgba(0,0,0,.3)";
+      ctx.fillRect(x2 - 92, top - 8, 184, 14);
+      const blinkRate = st === "crisis" ? 200 : 700;
+      const on = Math.floor(Date.now() / blinkRate) % 2 === 0;
+      ctx.fillStyle = st === "crisis" ? on ? "#ff4a3a" : "#7a2018" : on ? "#ffd84a" : "#8a7a30";
+      ctx.beginPath();
+      ctx.arc(x2, top - 14, 6, 0, 6.283);
+      ctx.fill();
+      if (on && st === "crisis") {
+        ctx.fillStyle = "rgba(255,74,58,.25)";
+        ctx.beginPath();
+        ctx.arc(x2, top - 14, 14, 0, 6.283);
+        ctx.fill();
+      }
+      ctx.fillStyle = "rgba(255,255,255,.14)";
+      for (let wy = top + 34; wy < FLOOR - 60; wy += 34) for (let wx = x2 - 66; wx <= x2 + 52; wx += 30) ctx.fillRect(wx, wy, 18, 18);
+      const isNear = near() === i && !modal;
+      ctx.fillStyle = isNear ? "#ffe9a0" : "#20262e";
+      ctx.fillRect(x2 - 18, FLOOR - 44 + shakeY, 36, 44);
+      if (isNear) {
+        ctx.strokeStyle = "#ffd84a";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x2 - 18, FLOOR - 44 + shakeY, 36, 44);
+      }
+      ctx.fillStyle = "rgba(0,0,0,.4)";
+      ctx.fillRect(x2 - 85, top + 6, 170, 24);
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 13px sans-serif";
+      ctx.fillText(s.n, x2, top + 23);
+      ctx.font = "46px sans-serif";
+      ctx.fillText(s.e, x2, FLOOR - 118 + shakeY);
+      if (st === "learn" && seen.has(i)) {
+        ctx.fillStyle = "#3ecf9c";
+        ctx.font = "bold 18px sans-serif";
+        ctx.fillText("\u2714", x2 + 72, top + 26);
+      }
+      if (isNear) {
+        ctx.fillStyle = "rgba(0,0,0,.55)";
+        ctx.fillRect(x2 - 68, FLOOR - 74 + shakeY, 136, 20);
+        ctx.fillStyle = "#ffd84a";
+        ctx.font = "bold 12px sans-serif";
+        ctx.fillText(isTouch ? "Toque em Interagir" : "Pressione E", x2, FLOOR - 60 + shakeY);
+      }
+    });
+    const x = px - cam, bob = Math.sin(walk) * 2, base = FLOOR + shakeY;
+    const step = Math.sin(walk * 2.2);
+    ctx.fillStyle = "rgba(0,0,0,.25)";
+    ctx.beginPath();
+    ctx.ellipse(x, base + 3, 16, 4, 0, 0, 6.283);
+    ctx.fill();
+    ctx.fillStyle = "#2c3540";
+    ctx.fillRect(x - 9, base - 16, 7, 16 + step * 3);
+    ctx.fillRect(x + 2, base - 16, 7, 16 - step * 3);
+    ctx.fillStyle = "#1a2027";
+    ctx.fillRect(x - 10 + (step > 0 ? 1 : 0), base - 3 + Math.max(0, step * 3), 9, 4);
+    ctx.fillRect(x + 1 + (step < 0 ? 1 : 0), base - 3 + Math.max(0, -step * 3), 9, 4);
+    ctx.fillStyle = "#e8803a";
+    ctx.fillRect(x - 11, base - 46 + bob, 22, 31);
+    ctx.fillStyle = "#f5e95a";
+    ctx.fillRect(x - 11, base - 38 + bob, 22, 4);
+    ctx.fillStyle = "#f5e95a";
+    ctx.fillRect(x - 2, base - 46 + bob, 4, 31);
+    ctx.fillStyle = "#d0722f";
+    ctx.fillRect(x + face * 10 - 2, base - 44 + bob - step * 2, 5, 20);
+    ctx.fillStyle = "#f2c9a0";
+    ctx.beginPath();
+    ctx.arc(x, base - 54 + bob, 10, 0, 6.283);
+    ctx.fill();
+    ctx.fillStyle = "#ffd84a";
+    ctx.beginPath();
+    ctx.arc(x, base - 56 + bob, 11, Math.PI, 0);
+    ctx.fill();
+    ctx.fillRect(x - 14, base - 58 + bob, 28, 4);
+    ctx.fillStyle = "#222";
+    ctx.fillRect(x + face * 5 - 1, base - 55 + bob, 3, 3);
+    popups.forEach((p) => {
+      p.t += 1;
+    });
+    popups = popups.filter((p) => p.t < 55);
+    popups.forEach((p) => {
+      ctx.globalAlpha = Math.max(0, 1 - p.t / 55);
+      ctx.fillStyle = "#3ecf9c";
+      ctx.font = "bold 16px sans-serif";
+      ctx.fillText(p.txt, p.x - cam, p.y - p.t * 0.9);
+      ctx.globalAlpha = 1;
+    });
+    confetti.forEach((c) => {
+      c.t++;
+      c.x += c.vx;
+      c.y += c.vy;
+      c.vy += 0.04;
+    });
+    confetti = confetti.filter((c) => c.y < H + 20 && c.t < 400);
+    confetti.forEach((c) => {
+      ctx.fillStyle = c.c;
+      ctx.fillRect(c.x, c.y, 5, 8);
+    });
+    if (st === "crisis") {
+      const pulse = 0.5 + 0.5 * Math.sin(Date.now() / 300);
+      const a = 0.05 + danger / 100 * 0.16 * pulse + (danger >= 70 ? 0.06 : 0);
+      ctx.fillStyle = "rgba(255,40,30," + a.toFixed(3) + ")";
+      ctx.fillRect(0, 0, W, H);
+    }
+  }
+  function frame() {
+    if (!alive) return;
+    frameN++;
+    if (shake > 0) shake *= 0.85;
+    if (shake < 0.4) shake = 0;
+    if (!modal && (st === "learn" || st === "crisis")) {
+      const l = !!keys.l, r = !!keys.r;
+      if (l || r) targetX = null;
+      if (targetX !== null) {
+        const dx = targetX - px;
+        if (Math.abs(dx) < 8) targetX = null;
+        else {
+          px += dx > 0 ? 4.2 : -4.2;
+          face = dx > 0 ? 1 : -1;
+          walk += 0.3;
+        }
+      }
+      if (keys.l) {
+        px -= 4.2;
+        face = -1;
+      }
+      if (keys.r) {
+        px += 4.2;
+        face = 1;
+      }
+      px = Math.max(40, Math.min(WORLD - 40, px));
+      if (keys.l || keys.r) walk += 0.3;
+      if (cool > 0) cool--;
+      if (st === "crisis") {
+        danger += 0.028;
+        if (frameN % 34 === 0) beep(frameN % 68 === 0 ? 470 : 590, 0.1, "sine", 0.022);
+        if (danger >= 100) {
+          danger = 100;
+          st = "lose";
+          end(false);
+        }
+      }
+      hud();
+    }
+    draw();
+    raf = requestAnimationFrame(frame);
+  }
+  function onKey(e, v) {
+    const k = e.key.toLowerCase();
+    if (k === "arrowleft" || k === "a") {
+      keys.l = v;
+      if (v) e.preventDefault();
+    }
+    if (k === "arrowright" || k === "d") {
+      keys.r = v;
+      if (v) e.preventDefault();
+    }
+    if (k === " ") e.preventDefault();
+    if (v && (k === "e" || k === " ")) act();
+  }
+  const kd = (e) => onKey(e, true);
+  const ku = (e) => onKey(e, false);
+  window.addEventListener("keydown", kd);
+  window.addEventListener("keyup", ku);
+  const bl = els.bl, br = els.br, bi = els.bi;
+  const pressL = (e) => {
+    e.preventDefault();
+    host.focus();
+    keys.l = true;
+  };
+  const pressR = (e) => {
+    e.preventDefault();
+    host.focus();
+    keys.r = true;
+  };
+  const releaseL = () => {
+    keys.l = false;
+  };
+  const releaseR = () => {
+    keys.r = false;
+  };
+  bl.addEventListener("pointerdown", pressL);
+  br.addEventListener("pointerdown", pressR);
+  ["pointerup", "pointerleave", "pointercancel"].forEach((ev) => {
+    bl.addEventListener(ev, releaseL);
+    br.addEventListener(ev, releaseR);
+  });
+  const onInteract = () => {
+    host.focus();
+    act();
+  };
+  bi.addEventListener("click", onInteract);
+  const onCanvasTap = (e) => {
+    host.focus();
+    if (modal || st !== "learn" && st !== "crisis") return;
+    const rect = cv.getBoundingClientRect();
+    const wx = (e.clientX - rect.left) / rect.width * W + camX;
+    targetX = Math.max(40, Math.min(WORLD - 40, wx));
+  };
+  cv.addEventListener("pointerdown", onCanvasTap);
+  const onMute = () => {
+    muted = !muted;
+    try {
+      localStorage.setItem("upn.muted", muted ? "1" : "0");
+    } catch (e) {
+    }
+    hud();
+    if (!muted) sClick();
+  };
+  els.mute.addEventListener("click", onMute);
+  const wakeAudio = () => {
+    audio();
+  };
+  host.addEventListener("pointerdown", wakeAudio);
+  window.addEventListener("keydown", wakeAudio);
+  window.__upn = {
+    state: () => ({ st, seen: seen.size, cur, danger: Math.round(danger * 10) / 10, score, best, modal, px: Math.round(px), target: st === "crisis" && cur < 4 ? INC[order[cur]].s : -1 }),
+    warp: (i) => {
+      px = sx(i);
+    },
+    act: () => act(),
+    setDanger: (v) => {
+      danger = v;
+    }
+  };
+  obj();
+  hud();
+  show('<h2>Bem-vindo, oper\u00E1rio! \u{1F477}</h2><p>Voc\u00EA come\u00E7ou hoje na ind\u00FAstria do combust\u00EDvel nuclear. Caminhe pelas 6 etapas, da mina de ur\u00E2nio ao reprocessamento, e aprenda a qu\u00EDmica que transforma um min\u00E9rio em energia. Fique atento: o que voc\u00EA descobrir ser\u00E1 essencial quando os problemas aparecerem.</p><p>Toque no ch\u00E3o ou use as setas para andar.</p><button class="upn-btn pri" data-ok type="button">Come\u00E7ar</button>');
+  els.box.querySelector("[data-ok]").onclick = () => {
+    sClick();
+    hide();
+  };
+  frame();
+  return () => {
+    alive = false;
+    cancelAnimationFrame(raf);
+    window.removeEventListener("keydown", kd);
+    window.removeEventListener("keyup", ku);
+    window.removeEventListener("keydown", wakeAudio);
+    if (window.__upn) delete window.__upn;
+    root.removeChild(host);
+    root.removeChild(styleEl);
+  };
+}
+startGame(document.getElementById('game'));
+</script>
+</body>
+</html>
